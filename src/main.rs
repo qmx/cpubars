@@ -1,6 +1,16 @@
 const BARS: &'static str = "▁ ▂ ▃ ▄ ▅ ▆ ▇ █";
 
+use std::path::Path;
+use std::fs::File;
+use std::io::Read;
+
 fn main() {
+    let path = Path::new("/proc/stat");
+
+    let mut f = File::open(&path).unwrap();
+    let mut s = Vec::new();
+    f.read_to_end(&mut s).unwrap();
+    println!("{:?}", parser::cpu_info(&s[..]));
     println!("{}", BARS);
 }
 
@@ -33,6 +43,14 @@ mod parser {
             std::str::FromStr::from_str
         )
     );
+
+    named!(
+        pub cpu<Vec<CpuInfo>>,
+        fold_many1!(cpu_info, Vec::new(), |mut acc: Vec<_>, item| {
+            acc.push(item);
+            acc
+        })
+        );
 
     named!(
         pub cpu_info<CpuInfo>,
@@ -118,6 +136,17 @@ mod parser {
                             guest_nice: 0,
                         }
                     );
+                }
+                _ => unreachable!(),
+            }
+        }
+
+        #[test]
+        fn test_full_proc_stat() {
+            let data = include_bytes!("../fixtures/sample_16cpu.0");
+            match super::cpu(&data[..]) {
+                IResult::Done(_, o) => {
+                    assert_eq!(o.len(), 17);
                 }
                 _ => unreachable!(),
             }
