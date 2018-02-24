@@ -3,7 +3,7 @@ const BARS: &'static str = "▁ ▂ ▃ ▄ ▅ ▆ ▇ █";
 use std::path::Path;
 use std::fs::File;
 use std::io::Read;
-use nom::IResult;
+use nom::IResult::Done;
 
 fn main() {
     let path = Path::new("/proc/stat");
@@ -11,13 +11,8 @@ fn main() {
     let mut f = File::open(&path).unwrap();
     let mut s = Vec::new();
     f.read_to_end(&mut s).unwrap();
-    match parser::stat(&s[..]) {
-        IResult::Done(_, o) => {
-            println!("{:?}", o);
-        }
-        _ => {
-            unreachable!();
-        }
+    if let Done(_, stat) = parser::stat(&s[..]) {
+        println!("{:?}", stat);
     }
 
     println!("{}", BARS);
