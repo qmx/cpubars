@@ -2,6 +2,10 @@
 name = "cpubars"
 version = "0.1.0"
 authors = ["Douglas Campos"]
+description = "shows cpu utilization by core in bars"
+homepage = "https://github.com/qmx/cpubars"
+repository = "https://github.com/qmx/cpubars"
+license = "MIT/Apache-2.0"
 
 [dependencies]
 nom = "3.2.1"
