@@ -31,7 +31,7 @@ mod parser {
         cores: Vec<CpuInfo>,
     }
 
-    #[derive(Debug, PartialEq, Eq, Default)]
+    #[derive(Debug)]
     pub struct CpuInfo {
         id: Option<u32>,
         user: u32,
@@ -45,6 +45,26 @@ mod parser {
         guest: u32,
         guest_nice: u32,
     }
+
+    impl Ord for CpuInfo {
+        fn cmp(&self, other: &CpuInfo) -> std::cmp::Ordering {
+            self.id.cmp(&other.id)
+        }
+    }
+
+    impl PartialOrd for CpuInfo {
+        fn partial_cmp(&self, other: &CpuInfo) -> Option<std::cmp::Ordering> {
+            Some(self.cmp(other))
+        }
+    }
+
+    impl PartialEq for CpuInfo {
+        fn eq(&self, other: &CpuInfo) -> bool {
+            self.id == other.id
+        }
+    }
+
+    impl Eq for CpuInfo {}
 
     named!(
         counter<u32>,
