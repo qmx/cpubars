@@ -1,4 +1,11 @@
 [[package]]
+name = "cpubars"
+version = "0.1.0"
+dependencies = [
+ "nom 3.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "libc"
 version = "0.2.36"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -17,13 +24,6 @@ version = "3.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "memchr 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "tmux-cpuchart"
-version = "0.1.0"
-dependencies = [
- "nom 3.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [metadata]

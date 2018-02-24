@@ -1,5 +1,5 @@
 [package]
-name = "tmux-cpuchart"
+name = "cpubars"
 version = "0.1.0"
 authors = ["Douglas Campos"]
 
