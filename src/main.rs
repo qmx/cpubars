@@ -66,6 +66,18 @@ mod parser {
 
     impl Eq for CpuInfo {}
 
+    pub struct CpuUtilization {
+        aggregate: f64,
+    }
+
+    impl std::ops::Sub for Stat {
+        type Output = CpuUtilization;
+
+        fn sub(self, other: Stat) -> CpuUtilization {
+            CpuUtilization { aggregate: 0.0 }
+        }
+    }
+
     named!(
         counter<u32>,
         map_res!(
@@ -188,6 +200,22 @@ mod parser {
                     assert_eq!(o.cores.len(), 16);
                 }
                 _ => unreachable!(),
+            }
+        }
+
+        #[test]
+        fn test_stat_sub() {
+            let d1 = include_bytes!("../fixtures/stress1_16cpu.0");
+            let d2 = include_bytes!("../fixtures/stress1_16cpu.1");
+            let s1 = parse(&d1[..]).unwrap();
+            let s2 = parse(&d2[..]).unwrap();
+            let utilization = s2 - s1;
+        }
+
+        fn parse<'a>(d: &'a [u8]) -> Result<super::Stat, &'a str> {
+            match super::stat(d) {
+                IResult::Done(_, stat) => Ok(stat),
+                _ => Err("parse failure"),
             }
         }
     }
