@@ -3,6 +3,7 @@ const BARS: &'static str = "▁ ▂ ▃ ▄ ▅ ▆ ▇ █";
 use std::path::Path;
 use std::fs::File;
 use std::io::Read;
+use nom::IResult;
 
 fn main() {
     let path = Path::new("/proc/stat");
@@ -10,7 +11,15 @@ fn main() {
     let mut f = File::open(&path).unwrap();
     let mut s = Vec::new();
     f.read_to_end(&mut s).unwrap();
-    println!("{:?}", parser::cpu_info(&s[..]));
+    match parser::stat(&s[..]) {
+        IResult::Done(_, o) => {
+            println!("{:?}", o);
+        }
+        _ => {
+            unreachable!();
+        }
+    }
+
     println!("{}", BARS);
 }
 
@@ -21,7 +30,13 @@ mod parser {
     use nom::*;
     use std;
 
-    #[derive(Debug, PartialEq, Default)]
+    #[derive(Debug, PartialEq, Eq)]
+    pub struct Stat {
+        aggregate: CpuInfo,
+        cores: Vec<CpuInfo>,
+    }
+
+    #[derive(Debug, PartialEq, Eq, Default)]
     pub struct CpuInfo {
         id: Option<u32>,
         user: u32,
@@ -45,15 +60,24 @@ mod parser {
     );
 
     named!(
-        pub cpu<Vec<CpuInfo>>,
+        individual_cores<Vec<CpuInfo>>,
         fold_many1!(cpu_info, Vec::new(), |mut acc: Vec<_>, item| {
             acc.push(item);
             acc
         })
+    );
+
+    named!(
+        pub stat<Stat>,
+        do_parse!(
+            aggregate: cpu_info >>
+            cores: individual_cores >>
+            (Stat{aggregate:aggregate,cores:cores})
+            )
         );
 
     named!(
-        pub cpu_info<CpuInfo>,
+        cpu_info<CpuInfo>,
         do_parse!(
             tag!("cpu") >>
             id: opt!(counter) >>
@@ -144,9 +168,9 @@ mod parser {
         #[test]
         fn test_full_proc_stat() {
             let data = include_bytes!("../fixtures/sample_16cpu.0");
-            match super::cpu(&data[..]) {
+            match super::stat(&data[..]) {
                 IResult::Done(_, o) => {
-                    assert_eq!(o.len(), 17);
+                    assert_eq!(o.cores.len(), 16);
                 }
                 _ => unreachable!(),
             }
