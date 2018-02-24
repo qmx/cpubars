@@ -1,21 +1,35 @@
-const BARS: &'static str = "▁ ▂ ▃ ▄ ▅ ▆ ▇ █";
 
 use std::path::Path;
 use std::fs::File;
 use std::io::Read;
-use nom::IResult::Done;
+use std::{thread, time};
 
 fn main() {
-    let path = Path::new("/proc/stat");
+    let bars: Vec<char> = "_▁▂▃▄▅▆▇█".chars().collect();
+    let s1 = get_stat().unwrap();
+    let d = time::Duration::from_millis(100);
+    thread::sleep(d);
+    let s2 = get_stat().unwrap();
 
+    let utilization = s2 - s1;
+    let values = utilization
+        .cores
+        .iter()
+        .map(|c| c.utilization)
+        .map(|v| (v * 100.0) as usize)
+        .map(|v| v / 12)
+        .map(|i| bars[i])
+        .collect::<String>();
+    println!("{}", values);
+}
+
+fn get_stat<'a>() -> Result<parser::Stat, &'a str> {
+    let path = Path::new("/proc/stat");
     let mut f = File::open(&path).unwrap();
     let mut s = Vec::new();
     f.read_to_end(&mut s).unwrap();
-    if let Done(_, stat) = parser::stat(&s[..]) {
-        println!("{:?}", stat);
-    }
-
-    println!("{}", BARS);
+    let stat = parser::parse(s);
+    stat
 }
 
 #[macro_use]
@@ -53,13 +67,13 @@ mod parser {
     }
 
     impl CoreInfo {
-        fn total(&self) -> u32 {
-            self.user + self.nice + self.system + self.idle + self.iowait + self.irq + self.softirq
-                + self.steal
+        fn total(&self) -> f64 {
+            (self.user + self.nice + self.system + self.idle + self.iowait + self.irq + self.softirq
+                + self.steal) as f64
         }
 
-        fn idle(&self) -> u32 {
-            self.idle + self.iowait
+        fn idle(&self) -> f64 {
+            (self.idle + self.iowait) as f64
         }
     }
 
@@ -83,15 +97,42 @@ mod parser {
 
     impl Eq for CoreInfo {}
 
+    #[derive(Debug)]
     pub struct CpuUtilization {
-        aggregate: f64,
+        pub cores: Vec<CoreUtilization>,
+    }
+
+    #[derive(Debug)]
+    pub struct CoreUtilization {
+        id: u32,
+        pub utilization: f64,
+    }
+
+    impl<'a> std::ops::Sub for &'a CoreInfo {
+        type Output = CoreUtilization;
+        fn sub(self, other: &'a CoreInfo) -> CoreUtilization {
+            let total = self.total() - other.total();
+            let idle = self.idle() - other.idle();
+            CoreUtilization {
+                id: self.id,
+                utilization: (total - idle) / total,
+            }
+        }
     }
 
     impl std::ops::Sub for Stat {
         type Output = CpuUtilization;
 
         fn sub(self, other: Stat) -> CpuUtilization {
-            CpuUtilization { aggregate: 0.0 }
+            let cores_utilization = self.cores
+                .iter()
+                .zip(other.cores.iter())
+                .map(|(a, b)| a - b)
+                .collect();
+
+            CpuUtilization {
+                cores: cores_utilization,
+            }
         }
     }
 
@@ -172,6 +213,12 @@ mod parser {
             )
         )
     );
+    pub fn parse<'a>(d: Vec<u8>) -> Result<Stat, &'a str> {
+        match stat(&d[..]) {
+            IResult::Done(_, stat) => Ok(stat),
+            _ => Err("parse failure"),
+        }
+    }
 
     #[cfg(test)]
     mod test {
@@ -229,17 +276,11 @@ mod parser {
         fn test_stat_sub() {
             let d1 = include_bytes!("../fixtures/stress1_16cpu.0");
             let d2 = include_bytes!("../fixtures/stress1_16cpu.1");
-            let s1 = parse(&d1[..]).unwrap();
-            let s2 = parse(&d2[..]).unwrap();
+            let s1 = super::parse(d1.to_vec()).unwrap();
+            let s2 = super::parse(d2.to_vec()).unwrap();
             let utilization = s2 - s1;
         }
 
-        fn parse<'a>(d: &'a [u8]) -> Result<super::Stat, &'a str> {
-            match super::stat(d) {
-                IResult::Done(_, stat) => Ok(stat),
-                _ => Err("parse failure"),
-            }
-        }
 
         #[test]
         fn test_sorted_cores() {
