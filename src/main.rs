@@ -30,7 +30,14 @@ mod parser {
         cores: Vec<CoreInfo>,
     }
 
-    #[derive(Debug)]
+    impl Stat {
+        fn new(mut cores: Vec<CoreInfo>) -> Stat {
+            cores.sort();
+            Stat { cores }
+        }
+    }
+
+    #[derive(Debug, Default)]
     pub struct CoreInfo {
         id: u32,
         user: u32,
@@ -98,7 +105,7 @@ mod parser {
         do_parse!(
             aggregate: aggregate_cpu_info >>
             cores: individual_cores >>
-            (Stat{cores:cores})
+            (Stat::new(cores))
             )
         );
 
@@ -221,6 +228,21 @@ mod parser {
                 IResult::Done(_, stat) => Ok(stat),
                 _ => Err("parse failure"),
             }
+        }
+
+        #[test]
+        fn test_sorted_cores() {
+            let c1 = CoreInfo {
+                id: 3,
+                ..Default::default()
+            };
+            let c2 = CoreInfo {
+                id: 0,
+                ..Default::default()
+            };
+            let mut v = vec![c1, c2];
+            v.sort();
+            assert_eq!(v[0].id, 0);
         }
     }
 }
