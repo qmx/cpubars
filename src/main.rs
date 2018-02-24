@@ -27,13 +27,12 @@ mod parser {
 
     #[derive(Debug, PartialEq, Eq)]
     pub struct Stat {
-        aggregate: CpuInfo,
-        cores: Vec<CpuInfo>,
+        cores: Vec<CoreInfo>,
     }
 
     #[derive(Debug)]
-    pub struct CpuInfo {
-        id: Option<u32>,
+    pub struct CoreInfo {
+        id: u32,
         user: u32,
         nice: u32,
         system: u32,
@@ -46,25 +45,25 @@ mod parser {
         guest_nice: u32,
     }
 
-    impl Ord for CpuInfo {
-        fn cmp(&self, other: &CpuInfo) -> std::cmp::Ordering {
+    impl Ord for CoreInfo {
+        fn cmp(&self, other: &CoreInfo) -> std::cmp::Ordering {
             self.id.cmp(&other.id)
         }
     }
 
-    impl PartialOrd for CpuInfo {
-        fn partial_cmp(&self, other: &CpuInfo) -> Option<std::cmp::Ordering> {
+    impl PartialOrd for CoreInfo {
+        fn partial_cmp(&self, other: &CoreInfo) -> Option<std::cmp::Ordering> {
             Some(self.cmp(other))
         }
     }
 
-    impl PartialEq for CpuInfo {
-        fn eq(&self, other: &CpuInfo) -> bool {
+    impl PartialEq for CoreInfo {
+        fn eq(&self, other: &CoreInfo) -> bool {
             self.id == other.id
         }
     }
 
-    impl Eq for CpuInfo {}
+    impl Eq for CoreInfo {}
 
     pub struct CpuUtilization {
         aggregate: f64,
@@ -87,7 +86,7 @@ mod parser {
     );
 
     named!(
-        individual_cores<Vec<CpuInfo>>,
+        individual_cores<Vec<CoreInfo>>,
         fold_many1!(cpu_info, Vec::new(), |mut acc: Vec<_>, item| {
             acc.push(item);
             acc
@@ -97,17 +96,16 @@ mod parser {
     named!(
         pub stat<Stat>,
         do_parse!(
-            aggregate: cpu_info >>
+            aggregate: aggregate_cpu_info >>
             cores: individual_cores >>
-            (Stat{aggregate:aggregate,cores:cores})
+            (Stat{cores:cores})
             )
         );
 
     named!(
-        cpu_info<CpuInfo>,
+        aggregate_cpu_info<()>,
         do_parse!(
-            tag!("cpu") >>
-            id: opt!(counter) >>
+            tag!("cpu ") >>
             user: ws!(counter) >>
             nice: ws!(counter) >>
             system: ws!(counter) >>
@@ -119,7 +117,28 @@ mod parser {
             guest: ws!(counter) >>
             guest_nice: ws!(counter) >>
             (
-                CpuInfo {
+                ()
+            )
+        )
+    );
+
+    named!(
+        cpu_info<CoreInfo>,
+        do_parse!(
+            tag!("cpu") >>
+            id: counter >>
+            user: ws!(counter) >>
+            nice: ws!(counter) >>
+            system: ws!(counter) >>
+            idle: ws!(counter) >>
+            iowait: ws!(counter) >>
+            irq: ws!(counter) >>
+            softirq: ws!(counter) >>
+            steal: ws!(counter) >>
+            guest: ws!(counter) >>
+            guest_nice: ws!(counter) >>
+            (
+                CoreInfo {
                     id: id,
                     user: user,
                     nice: nice,
@@ -138,29 +157,14 @@ mod parser {
 
     #[cfg(test)]
     mod test {
-        use super::{cpu_info, CpuInfo};
+        use super::{aggregate_cpu_info, cpu_info, CoreInfo};
         use nom::IResult;
         #[test]
         fn test_parse_aggregate_cpu() {
             let x = b"cpu  7378560 1341 419330 1234035738 849479 0 23487 0 0 0";
-            match cpu_info(&x[..]) {
+            match aggregate_cpu_info(&x[..]) {
                 IResult::Done(_, o) => {
-                    assert_eq!(
-                        o,
-                        CpuInfo {
-                            id: None,
-                            user: 7378560,
-                            nice: 1341,
-                            system: 419330,
-                            idle: 1234035738,
-                            iowait: 849479,
-                            irq: 0,
-                            softirq: 23487,
-                            steal: 0,
-                            guest: 0,
-                            guest_nice: 0,
-                        }
-                    );
+                    assert_eq!(o, ());
                 }
                 _ => unreachable!(),
             }
@@ -173,8 +177,8 @@ mod parser {
                 IResult::Done(_, o) => {
                     assert_eq!(
                         o,
-                        CpuInfo {
-                            id: Some(14),
+                        CoreInfo {
+                            id: 14,
                             user: 7378560,
                             nice: 1341,
                             system: 419330,
