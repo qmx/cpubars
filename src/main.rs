@@ -52,6 +52,17 @@ mod parser {
         guest_nice: u32,
     }
 
+    impl CoreInfo {
+        fn total(&self) -> u32 {
+            self.user + self.nice + self.system + self.idle + self.iowait + self.irq + self.softirq
+                + self.steal
+        }
+
+        fn idle(&self) -> u32 {
+            self.idle + self.iowait
+        }
+    }
+
     impl Ord for CoreInfo {
         fn cmp(&self, other: &CoreInfo) -> std::cmp::Ordering {
             self.id.cmp(&other.id)
