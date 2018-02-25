@@ -23,20 +23,22 @@ fn main() {
     println!("{}", values);
 }
 
-fn get_stat<'a>() -> Result<parser::Stat, &'a str> {
+fn get_stat<'a>() -> Result<parser::Stat, failure::Error> {
     let path = Path::new("/proc/stat");
-    let mut f = File::open(&path).unwrap();
+    let mut f = File::open(&path)?;
     let mut s = Vec::new();
-    f.read_to_end(&mut s).unwrap();
-    let stat = parser::parse(s);
-    stat
+    f.read_to_end(&mut s)?;
+    parser::parse(s)
 }
 
 #[macro_use]
 extern crate nom;
 
+extern crate failure;
+
 mod parser {
     use nom::*;
+    use failure;
     use std;
 
     #[derive(Debug, PartialEq, Eq)]
@@ -213,10 +215,10 @@ mod parser {
             )
         )
     );
-    pub fn parse<'a>(d: Vec<u8>) -> Result<Stat, &'a str> {
+    pub fn parse<'a>(d: Vec<u8>) -> Result<Stat, failure::Error> {
         match stat(&d[..]) {
             IResult::Done(_, stat) => Ok(stat),
-            _ => Err("parse failure"),
+            _ => Err(failure::err_msg("parse failure")),
         }
     }
 
