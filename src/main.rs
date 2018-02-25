@@ -1,26 +1,16 @@
-
 use std::path::Path;
 use std::fs::File;
 use std::io::Read;
 use std::{thread, time};
 
 fn main() {
-    let bars: Vec<char> = "_▁▂▃▄▅▆▇█".chars().collect();
     let s1 = get_stat().unwrap();
     let d = time::Duration::from_millis(100);
     thread::sleep(d);
     let s2 = get_stat().unwrap();
 
     let utilization = s2 - s1;
-    let values = utilization
-        .cores
-        .iter()
-        .map(|c| c.utilization)
-        .map(|v| (v * 100.0) as usize)
-        .map(|v| v / 12)
-        .map(|i| bars[i])
-        .collect::<String>();
-    println!("{}", values);
+    println!("{}", utilization);
 }
 
 fn get_stat<'a>() -> Result<parser::Stat, failure::Error> {
@@ -102,6 +92,25 @@ mod parser {
     #[derive(Debug)]
     pub struct CpuUtilization {
         pub cores: Vec<CoreUtilization>,
+    }
+
+    impl CpuUtilization {
+        fn show_bars(&self) -> String {
+            let bars: Vec<char> = "_▁▂▃▄▅▆▇█".chars().collect();
+            self.cores
+                .iter()
+                .map(|c| c.utilization)
+                .map(|v| (v * 100.0) as usize)
+                .map(|v| v / 12)
+                .map(|i| bars[i])
+                .collect::<String>()
+        }
+    }
+
+    impl std::fmt::Display for CpuUtilization {
+        fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+            write!(f, "{}", self.show_bars())
+        }
     }
 
     #[derive(Debug)]
