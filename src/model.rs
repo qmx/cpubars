@@ -5,13 +5,6 @@ pub struct Stat {
     pub cores: Vec<CoreInfo>,
 }
 
-impl Stat {
-    pub fn new(mut cores: Vec<CoreInfo>) -> Stat {
-        cores.sort();
-        Stat { cores }
-    }
-}
-
 #[derive(Debug, Default)]
 pub struct CoreInfo {
     pub id: u32,
@@ -29,7 +22,13 @@ pub struct CoreInfo {
 
 impl CoreInfo {
     fn total(&self) -> f64 {
-        (self.user + self.nice + self.system + self.idle + self.iowait + self.irq + self.softirq
+        (self.user
+            + self.nice
+            + self.system
+            + self.idle
+            + self.iowait
+            + self.irq
+            + self.softirq
             + self.steal) as f64
     }
 
@@ -104,7 +103,8 @@ impl std::ops::Sub for Stat {
     type Output = CpuUtilization;
 
     fn sub(self, other: Stat) -> CpuUtilization {
-        let cores_utilization = self.cores
+        let cores_utilization = self
+            .cores
             .iter()
             .zip(other.cores.iter())
             .map(|(a, b)| a - b)
@@ -123,13 +123,13 @@ mod test {
 
     #[test]
     fn test_stat_sub() {
-        let d1 = include_bytes!("../fixtures/stress1_16cpu.0");
-        let d2 = include_bytes!("../fixtures/stress1_16cpu.1");
-        let s1 = parser::parse(d1.to_vec()).unwrap();
-        let s2 = parser::parse(d2.to_vec()).unwrap();
+        let d1 = include_str!("../fixtures/stress1_16cpu.0");
+        let d2 = include_str!("../fixtures/stress1_16cpu.1");
+        let s1 = parser::parse(d1).unwrap();
+        let s2 = parser::parse(d2).unwrap();
         let utilization = s2 - s1;
+        assert_eq!("_____█__________", format!("{}", utilization))
     }
-
 
     #[test]
     fn test_sorted_cores() {

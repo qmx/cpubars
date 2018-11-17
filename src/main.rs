@@ -1,15 +1,13 @@
 #[macro_use]
 extern crate clap;
 extern crate failure;
-#[macro_use]
-extern crate nom;
 
 mod model;
 mod parser;
 
-use std::path::Path;
 use std::fs::File;
 use std::io::Read;
+use std::path::Path;
 use std::{thread, time};
 
 use model::Stat;
@@ -28,8 +26,7 @@ fn main() {
                 .value_name("DELAY")
                 .help("delay in miliseconds")
                 .default_value("100"),
-        )
-        .get_matches();
+        ).get_matches();
 
     let delay = value_t!(m, "delay", u64).unwrap_or(100);
 
@@ -45,7 +42,7 @@ fn main() {
 fn get_stat<'a>() -> Result<Stat, failure::Error> {
     let path = Path::new("/proc/stat");
     let mut f = File::open(&path)?;
-    let mut s = Vec::new();
-    f.read_to_end(&mut s)?;
-    parser::parse(s)
+    let mut s = String::new();
+    f.read_to_string(&mut s)?;
+    parser::parse(&s)
 }
