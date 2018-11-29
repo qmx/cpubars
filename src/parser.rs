@@ -53,7 +53,7 @@ mod test {
         let d2 = include_str!("../fixtures/sample_16cpu.1");
         let s1 = super::parse(d1).unwrap();
         let s2 = super::parse(d2).unwrap();
-        assert_eq!("________________", format!("{}", s2 - s1));
+        assert_eq!("                ", format!("{}", s2 - s1));
     }
 
 }

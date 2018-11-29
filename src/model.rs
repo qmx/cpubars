@@ -64,7 +64,7 @@ pub struct CpuUtilization {
 
 impl CpuUtilization {
     fn show_bars(&self) -> String {
-        let bars: Vec<char> = "_▁▂▃▄▅▆▇█".chars().collect();
+        let bars: Vec<char> = " ▁▂▃▄▅▆▇█".chars().collect();
         self.cores
             .iter()
             .map(|c| c.utilization)
@@ -128,7 +128,7 @@ mod test {
         let s1 = parser::parse(d1).unwrap();
         let s2 = parser::parse(d2).unwrap();
         let utilization = s2 - s1;
-        assert_eq!("_____█__________", format!("{}", utilization))
+        assert_eq!("     █          ", format!("{}", utilization))
     }
 
     #[test]
