@@ -1,5 +1,3 @@
-#[macro_use]
-extern crate clap;
 use failure;
 
 mod model;
@@ -12,7 +10,7 @@ use std::{thread, time};
 
 use crate::model::Stat;
 
-use clap::{App, Arg};
+use clap::{crate_authors, crate_description, crate_name, crate_version, value_t, App, Arg};
 
 fn main() {
     let m = App::new(crate_name!())
