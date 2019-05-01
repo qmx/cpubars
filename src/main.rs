@@ -1,6 +1,6 @@
 #[macro_use]
 extern crate clap;
-extern crate failure;
+use failure;
 
 mod model;
 mod parser;
@@ -10,7 +10,7 @@ use std::io::Read;
 use std::path::Path;
 use std::{thread, time};
 
-use model::Stat;
+use crate::model::Stat;
 
 use clap::{App, Arg};
 
@@ -26,7 +26,8 @@ fn main() {
                 .value_name("DELAY")
                 .help("delay in miliseconds")
                 .default_value("100"),
-        ).get_matches();
+        )
+        .get_matches();
 
     let delay = value_t!(m, "delay", u64).unwrap_or(100);
 

@@ -6,6 +6,7 @@ description = "shows cpu utilization by core in bars"
 homepage = "https://github.com/qmx/cpubars"
 repository = "https://github.com/qmx/cpubars"
 license = "MIT/Apache-2.0"
+edition = "2018"
 
 [dependencies]
 failure = "0.1.1"

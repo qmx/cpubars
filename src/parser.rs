@@ -1,6 +1,6 @@
 use failure;
 
-use model::{CoreInfo, Stat};
+use crate::model::{CoreInfo, Stat};
 
 pub fn parse(data: &str) -> Result<Stat, failure::Error> {
     fn parse_cpu_line(s: &str) -> Result<CoreInfo, failure::Error> {
@@ -38,7 +38,8 @@ pub fn parse(data: &str) -> Result<Stat, failure::Error> {
             } else {
                 s
             }
-        }).map(parse_cpu_line)
+        })
+        .map(parse_cpu_line)
         .collect();
 
     Ok(Stat { cores: cpus? })

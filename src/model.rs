@@ -76,7 +76,7 @@ impl CpuUtilization {
 }
 
 impl std::fmt::Display for CpuUtilization {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
         write!(f, "{}", self.show_bars())
     }
 }
@@ -119,7 +119,7 @@ impl std::ops::Sub for Stat {
 #[cfg(test)]
 mod test {
     use super::CoreInfo;
-    use parser;
+    use crate::parser;
 
     #[test]
     fn test_stat_sub() {
