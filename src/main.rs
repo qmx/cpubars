@@ -1,5 +1,3 @@
-use failure;
-
 mod model;
 mod parser;
 
@@ -9,6 +7,7 @@ use std::path::Path;
 use std::{thread, time};
 
 use crate::model::Stat;
+use anyhow;
 
 use clap::{crate_authors, crate_description, crate_name, crate_version, value_t, App, Arg};
 
@@ -38,7 +37,7 @@ fn main() {
     println!("{}", utilization);
 }
 
-fn get_stat<'a>() -> Result<Stat, failure::Error> {
+fn get_stat<'a>() -> Result<Stat, anyhow::Error> {
     let path = Path::new("/proc/stat");
     let mut f = File::open(&path)?;
     let mut s = String::new();

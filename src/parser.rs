@@ -1,9 +1,9 @@
-use failure;
+use anyhow;
 
 use crate::model::{CoreInfo, Stat};
 
-pub fn parse(data: &str) -> Result<Stat, failure::Error> {
-    fn parse_cpu_line(s: &str) -> Result<CoreInfo, failure::Error> {
+pub fn parse(data: &str) -> Result<Stat, anyhow::Error> {
+    fn parse_cpu_line(s: &str) -> Result<CoreInfo, anyhow::Error> {
         let line = s
             .split(" ")
             .map(|t| t.parse::<u32>().expect("failed to parse counter"))
@@ -29,7 +29,7 @@ pub fn parse(data: &str) -> Result<Stat, failure::Error> {
         .filter(|s| s.starts_with("cpu"))
         .collect::<Vec<&str>>();
 
-    let cpus: Result<Vec<CoreInfo>, failure::Error> = cpu_data
+    let cpus: Result<Vec<CoreInfo>, anyhow::Error> = cpu_data
         .iter()
         .skip(1)
         .map(|s| {
@@ -56,5 +56,4 @@ mod test {
         let s2 = super::parse(d2).unwrap();
         assert_eq!("                ", format!("{}", s2 - s1));
     }
-
 }
