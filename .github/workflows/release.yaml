@@ -27,6 +27,7 @@ jobs:
         uses: actions-rs/cargo@v1
         env:
           CC: clang
+          RUSTFLAGS: "-C linker=rust-lld -C linker-flavor=ld.lld"
         with:
           command: build
           args: --release --target x86_64-unknown-linux-musl
@@ -35,6 +36,7 @@ jobs:
         uses: actions-rs/cargo@v1
         env:
           CC: clang
+          RUSTFLAGS: "-C linker=rust-lld -C linker-flavor=ld.lld"
         with:
           command: build
           args: --release --target armv7-unknown-linux-musleabihf
