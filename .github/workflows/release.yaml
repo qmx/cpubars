@@ -21,7 +21,6 @@ jobs:
           override: true
 
       - name: Build
-        if: matrix.os == 'ubuntu-latest'
         uses: actions-rs/cargo@v1
         env:
           CC: clang
