@@ -45,10 +45,10 @@ jobs:
         run: mkdir ./dist
 
       - name: Copy amd64 binary
-        run: cp ./target/x86_64-unknown-linux-musl/release/cpubars ./dist/cpubars-linux-amd64 && strip ./dist/cpubars-linux-amd64
+        run: cp ./target/x86_64-unknown-linux-musl/release/cpubars ./dist/cpubars-linux-amd64
 
       - name: Copy ARMv7 binary
-        run: cp ./target/armv7-unknown-linux-musleabihf/release/cpubars ./dist/cpubars-linux-armv7 && strip ./dist/cpubars-linux-armv7
+        run: cp ./target/armv7-unknown-linux-musleabihf/release/cpubars ./dist/cpubars-linux-armv7
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v1
