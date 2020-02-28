@@ -20,7 +20,10 @@ jobs:
           target: x86_64-unknown-linux-musl
           override: true
 
-      - name: Build
+      - name: Add extra toolchain
+        run: rustup target add armv7-unknown-linux-musleabihf
+
+      - name: Build amd64
         uses: actions-rs/cargo@v1
         env:
           CC: clang
@@ -28,11 +31,22 @@ jobs:
           command: build
           args: --release --target x86_64-unknown-linux-musl
 
+      - name: Build ARMv7
+        uses: actions-rs/cargo@v1
+        env:
+          CC: clang
+        with:
+          command: build
+          args: --release --target armv7-unknown-linux-musleabihf
+
       - name: Create distribution dir
         run: mkdir ./dist
 
       - name: Copy amd64 binary
         run: cp ./target/x86_64-unknown-linux-musl/release/cpubars ./dist/cpubars-linux-amd64 && strip ./dist/cpubars-linux-amd64
+
+      - name: Copy ARMv7 binary
+        run: cp ./target/armv7-unknown-linux-musleabihf/release/cpubars ./dist/cpubars-linux-armv7 && strip ./dist/cpubars-linux-armv7
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v1
