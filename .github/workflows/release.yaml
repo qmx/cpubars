@@ -5,7 +5,7 @@ on:
       - 'v*'
 
 jobs:
-  build-amd64:
+  build:
     name: build-amd64
     runs-on: ubuntu-latest
     strategy:
