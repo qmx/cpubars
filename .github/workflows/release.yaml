@@ -5,14 +5,18 @@ on:
       - 'v*'
 
 jobs:
-  build:
-    name: build
+  build-amd64:
+    name: build-amd64
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [x86_64, armv7]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v1
 
       - name: Install Rust toolchain
+        if: matrix.arch == 'x86_64'
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
@@ -20,10 +24,17 @@ jobs:
           target: x86_64-unknown-linux-musl
           override: true
 
-      - name: Add extra toolchain
-        run: rustup target add armv7-unknown-linux-musleabihf
+      - name: Install Rust toolchain
+        if: matrix.arch == 'armv7'
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          target: armv7-unknown-linux-musleabihf
+          override: true
 
-      - name: Build amd64
+      - name: Build x86_64
+        if: matrix.arch == 'x86_64'
         uses: actions-rs/cargo@v1
         env:
           CC: clang
@@ -33,6 +44,7 @@ jobs:
           args: --release --target x86_64-unknown-linux-musl
 
       - name: Build ARMv7
+        if: matrix.arch == 'armv7'
         uses: actions-rs/cargo@v1
         env:
           CC: clang
@@ -44,16 +56,18 @@ jobs:
       - name: Create distribution dir
         run: mkdir ./dist
 
-      - name: Copy amd64 binary
+      - name: Copy x86_64 binary
+        if: matrix.arch == 'x86_64'
         run: cp ./target/x86_64-unknown-linux-musl/release/cpubars ./dist/cpubars-linux-amd64
 
       - name: Copy ARMv7 binary
+        if: matrix.arch == 'armv7'
         run: cp ./target/armv7-unknown-linux-musleabihf/release/cpubars ./dist/cpubars-linux-armv7
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v1
         with:
-          name: build-linux
+          name: build-linux-{{ matrix.arch }}
           path: ./dist
 
   make-release:
@@ -66,8 +80,14 @@ jobs:
 
       - uses: actions/download-artifact@v1
         with:
-          name: build-linux
+          name: build-linux-x86_64
           path: dist
+
+      - uses: actions/download-artifact@v1
+        with:
+          name: build-linux-armv7
+          path: dist
+
       - run: ls -all ./dist
 
       - name: Create Release
@@ -86,8 +106,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/cpubars-linux-amd64
-          asset_name: cpubars-linux-amd64
+          asset_path: ./dist/cpubars-linux-x86_64
+          asset_name: cpubars-linux-x86_64
           asset_content_type: application/octet-stream
 
       - uses: actions/upload-release-asset@v1.0.1
