@@ -17,20 +17,11 @@ jobs:
 
       - name: Install Rust toolchain
         if: matrix.arch == 'x86_64'
-        uses: actions-rs/toolchain@v1
+        uses: qmx/toolchain@multi-target
         with:
           toolchain: stable
           profile: minimal
-          target: x86_64-unknown-linux-musl
-          override: true
-
-      - name: Install Rust toolchain
-        if: matrix.arch == 'armv7'
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          profile: minimal
-          target: armv7-unknown-linux-musleabihf
+          target: x86_64-unknown-linux-musl, armv7-unknown-linux-musleabihf
           override: true
 
       - name: Build x86_64
