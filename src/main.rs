@@ -1,17 +1,10 @@
-mod model;
-mod parser;
-
-use std::fs::File;
-use std::io::Read;
-use std::path::Path;
 use std::{thread, time};
 
-use crate::model::Stat;
-use anyhow;
+use psutil::cpu::cpu_times_percpu;
 
 use clap::{crate_authors, crate_description, crate_name, crate_version, value_t, App, Arg};
 
-fn main() {
+fn main() -> anyhow::Result<()> {
     let m = App::new(crate_name!())
         .about(crate_description!())
         .version(crate_version!())
@@ -28,19 +21,21 @@ fn main() {
 
     let delay = value_t!(m, "delay", u64).unwrap_or(100);
 
-    let s1 = get_stat().unwrap();
-    let d = time::Duration::from_millis(delay);
-    thread::sleep(d);
-    let s2 = get_stat().unwrap();
+    let bars: Vec<char> = " ▁▂▃▄▅▆▇█".chars().collect();
 
-    let utilization = s2 - s1;
-    println!("{}", utilization);
-}
+    let t1 = cpu_times_percpu()?;
+    thread::sleep(time::Duration::from_millis(delay));
+    let t2 = cpu_times_percpu()?;
+    let result: String = t2
+        .iter()
+        .zip(t1.iter())
+        .map(|(a, b)| a - b)
+        .map(|c| (c.total().as_secs_f64() - c.idle().as_secs_f64()) / c.total().as_secs_f64())
+        .map(|v| (v * 100.0) as usize)
+        .map(|v| v / 12)
+        .map(|i| bars[i])
+        .collect();
 
-fn get_stat<'a>() -> Result<Stat, anyhow::Error> {
-    let path = Path::new("/proc/stat");
-    let mut f = File::open(&path)?;
-    let mut s = String::new();
-    f.read_to_string(&mut s)?;
-    parser::parse(&s)
+    println!("{}", result);
+    Ok(())
 }
